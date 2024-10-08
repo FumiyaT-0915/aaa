@@ -1,16 +1,16 @@
-Sub MultipleRegressionAnalysis02()
+Sub MultipleRegressionAnalysis01()
     ' サンプルデータの定義
-    Dim temperature As Variant
-    Dim humidity As Variant
-    Dim weather As Variant
-    Dim windSpeed As Variant
-    Dim trafficVolume As Variant
-    
-    temperature = Array(30, 25, 28, 22, 31, 27, 26, 29, 24, 23)
-    humidity = Array(70, 65, 75, 60, 80, 68, 72, 74, 66, 64)
-    weather = Array(1, 0, 1, 0, 1, 1, 0, 1, 0, 0) ' 1: 晴れ, 0: 雨
-    windSpeed = Array(5, 3, 4, 2, 6, 4, 3, 5, 2, 3)
-    trafficVolume = Array(200, 180, 190, 170, 210, 195, 185, 205, 175, 165)
+'    Dim temperature As Variant
+'    Dim humidity As Variant
+'    Dim weather As Variant
+'    Dim windSpeed As Variant
+'    Dim trafficVolume As Variant
+'
+'    temperature = Array(30, 25, 28, 22, 31, 27, 26, 29, 24, 23)
+'    humidity = Array(70, 65, 75, 60, 80, 68, 72, 74, 66, 64)
+'    weather = Array(1, 0, 1, 0, 1, 1, 0, 1, 0, 0) ' 1: 晴れ, 0: 雨
+'    windSpeed = Array(5, 3, 4, 2, 6, 4, 3, 5, 2, 3)
+'    trafficVolume = Array(200, 180, 190, 170, 210, 195, 185, 205, 175, 165)
 
     
     ' 結果シートの存在を確認し、存在する場合は削除
@@ -30,77 +30,89 @@ Sub MultipleRegressionAnalysis02()
     ' シート名を変更
     rNewSheet.Name = "RegressionResult"
     
+    Set rws = ThisWorkbook.Sheets("RegressionResult")
+    
+
+    Dim btn As Button
+    Dim macroName As String
+    
+    ' マクロ名を指定
+    macroName = "MultipleRegressionAnalysis01"
+    
+    ' ボタンを作成
+    Set btn = rws.Buttons.Add(150, 60, 100, 30) ' (左, 上, 幅, 高さ)
+    btn.Caption = "分析開始"
+    
+    ' ボタンにマクロを割り当て
+    btn.OnAction = macroName
+    
     
     ' でーたシートの存在を確認し、存在しない場合は新たに作成
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets("RegressionData")
     
-    If Not ws Is Nothing Then
-        Application.DisplayAlerts = False
-        ws.Delete
-        Application.DisplayAlerts = True
-    End If
-    On Error GoTo 0
-    
-    Dim NewSheet As Worksheet
-    ' シートの最後に新しいシートを追加
-    Set NewSheet = Worksheets.Add(After:=Worksheets(Worksheets.Count))
-    ' シート名を変更
-    NewSheet.Name = "RegressionData"
+'    If Not ws Is Nothing Then
+'        Application.DisplayAlerts = False
+'        ws.Delete
+'        Application.DisplayAlerts = True
+'    End If
+'    On Error GoTo 0
+'
+'    Dim NewSheet As Worksheet
+'    ' シートの最後に新しいシートを追加
+'    Set NewSheet = Worksheets.Add(After:=Worksheets(Worksheets.Count))
+'    ' シート名を変更
+'    NewSheet.Name = "RegressionData"
     
     ThisWorkbook.Worksheets("RegressionData").Activate
     
     Set ws = ThisWorkbook.Sheets("RegressionData")
     
     ' データをシートに書き込む
-    ws.Range("A1:E1").Value = Array("Temperature", "Humidity", "Weather", "WindSpeed", "TrafficVolume")
-    ws.Range("A2:A11").Value = Application.Transpose(temperature)
-    ws.Range("B2:B11").Value = Application.Transpose(humidity)
-    ws.Range("C2:C11").Value = Application.Transpose(weather)
-    ws.Range("D2:D11").Value = Application.Transpose(windSpeed)
-    ws.Range("E2:E11").Value = Application.Transpose(trafficVolume)
+'    ws.Range("A1:E1").Value = Array("TrafficVolume", "Temperature", "Humidity", "Weather", "WindSpeed")
+'    ws.Range("A2:A11").Value = Application.Transpose(trafficVolume)
+'    ws.Range("B2:B11").Value = Application.Transpose(temperature)
+'    ws.Range("C2:C11").Value = Application.Transpose(humidity)
+'    ws.Range("D2:D11").Value = Application.Transpose(weather)
+'    ws.Range("E2:E11").Value = Application.Transpose(windSpeed)
+    
+    Dim lastRow As Long
+    Dim lastCol As Long
+    Dim dataRange As Range
+    Dim mokutekiRange As Range
+    
+    ' 最終行を取得
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    
+    ' 最終列を取得
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    
+    ' 動的な範囲を選択
+    Set dataRange = ws.Range(ws.Cells(1, 2), ws.Cells(lastRow, lastCol))
+    Set mokutekiRange = ws.Range(ws.Cells(1, 1), ws.Cells(lastRow, 1))
+    
+'    Set dataRange = ws.Range(ws.Cells(1, 2), ws.Cells(11, 5))
+'    Set mokutekiRange = ws.Range(ws.Cells(1, 1), ws.Cells(1, 11))
+'
+'    ws.Range(ws.Cells(1, 2), ws.Cells(11, 5)).Select
+'    ws.Range(ws.Cells(1, 1), ws.Cells(11, 1)).Select
+'    ws.Range("E1:E11").Select
+'    ws.Range("A1:D11").Select
+
     
     ' データの最後の行の三行下に結果を出力
     Dim outputCell As Range
     Set outputCell = ThisWorkbook.Sheets("RegressionResult").Range("A1")
     
     ' 分析ツールを使用して重回帰分析を実行
-    Application.Run "ATPVBAEN.XLAM!Regress", ws.Range("E1:E11"), ws.Range("A1:D11"), True, True, , outputCell, True, True, True, True
-    
-    ' 予測値を計算してシートに書き込む
-    Dim intercept As Double
-    Dim coefTemp As Double
-    Dim coefHumidity As Double
-    Dim coefWeather As Double
-    Dim coefWindSpeed As Double
-    
-    intercept = CDbl(outputCell.Cells(17, 2).Value) ' 切片
-    coefTemp = CDbl(outputCell.Cells(18, 2).Value) ' 気温の係数
-    coefHumidity = CDbl(outputCell.Cells(19, 2).Value) ' 湿度の係数
-    coefWeather = CDbl(outputCell.Cells(20, 2).Value) ' 天気の係数
-    coefWindSpeed = CDbl(outputCell.Cells(21, 2).Value) ' 風速の係数
-    
-    Dim i As Integer
-    For i = 2 To 11
-        ws.Cells(i, 6).Value = intercept + coefTemp * ws.Cells(i, 1).Value _
-        + coefHumidity * ws.Cells(i, 2).Value _
-        + coefWeather * ws.Cells(i, 3).Value _
-        + coefWindSpeed * ws.Cells(i, 4).Value
-    Next i
-    ws.Range("F1").Value = "PredictedTrafficVolume"
-    
-    ' 実測値と予測値の差を計算してシートに書き込む
-    For i = 2 To 11
-        ws.Cells(i, 7).Formula = "=" & ws.Cells(i, 5).Address & "-" & ws.Cells(i, 6).Address
-    Next i
-    ws.Range("G1").Value = "Difference"
+    Application.Run "ATPVBAEN.XLAM!Regress", mokutekiRange, dataRange, True, True, , outputCell, True, True, True, True
     
     ' グラフを作成
     Dim chartObj As ChartObject
-    Set chartObj = ws.ChartObjects.Add(Left:=300, Width:=400, Top:=10, Height:=300)
+    Set chartObj = rws.ChartObjects.Add(Left:=300, Width:=400, Top:=10, Height:=300)
     With chartObj.Chart
-        .SetSourceData Source:=ws.Range("$A$1:$E$11") ' 正しいデータ範囲を指定
+        .SetSourceData Source:=dataRange ' 正しいデータ範囲を指定
         .ChartType = xlXYScatterLines ' 散布図（線あり）
         .HasTitle = True
         .ChartTitle.Text = "重回帰分析結果"
@@ -111,9 +123,18 @@ Sub MultipleRegressionAnalysis02()
     End With
     
     ' 実測値と予測値の差を示すグラフを作成
-    Set chartObj = ws.ChartObjects.Add(Left:=300, Width:=400, Top:=320, Height:=300)
+    Dim kekkaRange As Range
+    lastRow = rws.Cells(rws.Rows.Count, 1).End(xlUp).Row
+    Set kekkaRange = rws.Range(rws.Cells(16 + 6 + lastCol, 2), rws.Cells(lastRow, 2))
+    
+    Dim hikaku_mokutekiRange As Range
+    Set hikaku_mokutekiRange = rws.Range(rws.Cells(16 + 6 + lastCol, 5), rws.Cells(lastRow, 5))
+    hikaku_mokutekiRange.Value = mokutekiRange.Value
+    
+    Set chartObj = rws.ChartObjects.Add(Left:=300, Width:=400, Top:=320, Height:=300)
+
     With chartObj.Chart
-        .SetSourceData Source:=ws.Range("$E$1:$F$11") ' 実測値と予測値の範囲を指定
+        .SetSourceData Source:=Union(kekkaRange, hikaku_mokutekiRange) ' 実測値と予測値の範囲を指定
         .ChartType = xlLineMarkers ' 折れ線グラフ（マーカー付き）
         .HasTitle = True
         .ChartTitle.Text = "実測値と予測値の比較"
@@ -124,9 +145,9 @@ Sub MultipleRegressionAnalysis02()
     End With
     
     ' 差分を示すグラフを作成
-    Set chartObj = ws.ChartObjects.Add(Left:=300, Width:=400, Top:=630, Height:=300)
+    Set chartObj = rws.ChartObjects.Add(Left:=300, Width:=400, Top:=630, Height:=300)
     With chartObj.Chart
-        .SetSourceData Source:=ws.Range("$G$1:$G$11") ' 差分の範囲を指定
+        .SetSourceData Source:=rws.Range(rws.Cells(16 + 6 + lastCol, 3), rws.Cells(lastRow, 3)) ' 差分の範囲を指定
         .ChartType = xlColumnClustered ' クラスタ化された縦棒グラフ
         .HasTitle = True
         .ChartTitle.Text = "実測値と予測値の差分"
@@ -137,5 +158,6 @@ Sub MultipleRegressionAnalysis02()
     End With
 End Sub
 
-
-
+Sub execute()
+    Call MultipleRegressionAnalysis01
+End Sub
